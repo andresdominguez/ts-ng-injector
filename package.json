@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/andresdominguez/ts-ng-injector/issues"
   },
-  "homepage": "https://github.com/andresdominguez/ts-ng-injector#readme"
+  "homepage": "https://github.com/andresdominguez/ts-ng-injector#readme",
+  "devDependencies": {
+    "jest": "^21.2.1"
+  }
 }
