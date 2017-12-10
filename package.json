@@ -1,0 +1,20 @@
+{
+  "name": "ts-ng-injector",
+  "version": "1.0.0",
+  "description": "Inject modules into an angular module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andresdominguez/ts-ng-injector.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andresdominguez/ts-ng-injector/issues"
+  },
+  "homepage": "https://github.com/andresdominguez/ts-ng-injector#readme"
+}
