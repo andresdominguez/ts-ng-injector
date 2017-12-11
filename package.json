@@ -19,21 +19,24 @@
   "homepage": "https://github.com/andresdominguez/ts-ng-injector#readme",
   "devDependencies": {
     "@types/jest": "^21.1.8",
-    "jest": "^21.2.1"
+    "jest": "^21.2.1",
+    "ts-jest": "^21.2.4"
   },
   "dependencies": {
     "typescript": "^2.6.2"
   },
   "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/lib/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleFileExtensions": [
       "ts",
-      "js"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)$": "<rootDir>/preprocessor.js"
-    },
-    "testMatch": [
-      "**/*test.(ts|tsx|js)"
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
     ]
   }
 }
