@@ -23,5 +23,17 @@
   },
   "dependencies": {
     "typescript": "^2.6.2"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "<rootDir>/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*test.(ts|tsx|js)"
+    ]
   }
 }
