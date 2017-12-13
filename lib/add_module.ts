@@ -7,11 +7,11 @@ export function parseFile(fileName: string): ts.SourceFile {
 
 export function addModule(sourceFile: ts.SourceFile,
                           moduleName: string, importPath: string): ts.SourceFile {
-  const importDeclaration = addImport(moduleName, importPath);
+  const importDeclaration = createImportDeclaration(moduleName, importPath);
   return ts.updateSourceFileNode(sourceFile, [importDeclaration, ...sourceFile.statements]);
 }
 
-function addImport(name: string, pathTo: string): ts.ImportDeclaration {
+function createImportDeclaration(name: string, pathTo: string): ts.ImportDeclaration {
   const id = ts.createIdentifier(name);
   const importSpecifier = ts.createImportSpecifier(undefined, id);
   const namedImports = ts.createNamedImports([importSpecifier]);
