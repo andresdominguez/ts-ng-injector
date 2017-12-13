@@ -1,10 +1,5 @@
 import * as ts from 'typescript';
-import {readFileSync} from "fs";
-
-export function sum(one: number, two: number) {
-  return one + two;
-}
-
+import {readFileSync} from 'fs';
 
 export function parseFile(fileName: string): ts.SourceFile {
   return ts.createSourceFile(fileName, readFileSync(fileName).toString(), ts.ScriptTarget.ES2015, /*setParentNodes */ true);
