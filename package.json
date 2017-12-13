@@ -19,6 +19,7 @@
   "homepage": "https://github.com/andresdominguez/ts-ng-injector#readme",
   "devDependencies": {
     "@types/jest": "^21.1.8",
+    "@types/node": "^8.0.58",
     "jest": "^21.2.1",
     "ts-jest": "^21.2.4"
   },
