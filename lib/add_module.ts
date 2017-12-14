@@ -72,7 +72,5 @@ export function printFile(sourceFile: ts.SourceFile): string {
     newLine: ts.NewLineKind.LineFeed,
   });
 
-  const result = printer.printNode(ts.EmitHint.Unspecified, sourceFile, resultFile);
-  console.log(result);
-  return result;
+  return printer.printNode(ts.EmitHint.Unspecified, sourceFile, resultFile);
 }
