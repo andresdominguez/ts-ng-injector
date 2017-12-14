@@ -1,5 +1,4 @@
-import {addImport, addToNgModuleImports, createFile, parseFile, printFile} from "./add_module";
-import {join} from 'path';
+import {addImport, addToNgModuleImports, createFile, printFile} from "./add_module";
 
 const beforeInject = `import {NgModule} from '@angular/core';
 
