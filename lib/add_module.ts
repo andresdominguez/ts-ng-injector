@@ -2,7 +2,11 @@ import * as ts from 'typescript';
 import {readFileSync} from 'fs';
 
 export function parseFile(fileName: string): ts.SourceFile {
-  return ts.createSourceFile(fileName, readFileSync(fileName).toString(), ts.ScriptTarget.ES2015, /*setParentNodes */ true);
+  return createFile(fileName, readFileSync(fileName).toString());
+}
+
+export function createFile(fileName: string, fileContents: string): ts.SourceFile {
+  return ts.createSourceFile(fileName, fileContents, ts.ScriptTarget.ES2015, true);
 }
 
 export function addImport(sourceFile: ts.SourceFile,
