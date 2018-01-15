@@ -9,6 +9,11 @@ export class TestModule {
 }
 `;
 
+const classWithoutNgModule = `import {NgModule} from '@angular/core';
+export class TestModule {
+}
+`;
+
 test('Adds ts import', () => {
   let sourceFile = createFile('before.ts', beforeInject);
   let file = addImport(sourceFile, 'SomeModule', 'foo/bar');
@@ -29,6 +34,15 @@ test('Add NgModule import', () => {
 @NgModule({
     imports: [SomeModule,]
 })
+export class TestModule {
+}
+`);
+});
+
+test('Ignores class without NgModule', () => {
+  let sourceFile = createFile('before.ts', classWithoutNgModule);
+  let file = addToNgModuleImports(sourceFile, 'SomeModule');
+  expect(printFile(file)).toBe(`import { NgModule } from '@angular/core';
 export class TestModule {
 }
 `);
