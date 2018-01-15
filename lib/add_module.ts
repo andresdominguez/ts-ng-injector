@@ -19,6 +19,7 @@ export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: stri
 
   }
 
+  // Find @NgModule({imports:[]})
   Maybe.lift(sourceFile)
       .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
       .fmap(findNgModuleDecorator())
