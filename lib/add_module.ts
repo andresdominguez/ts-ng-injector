@@ -25,11 +25,6 @@ function hasNgModuleDecorator(classDeclaration: ts.ClassDeclaration): boolean {
   return false;
 }
 
-function doFind(node: ts.Node): Maybe<ts.Node> {
-  return Maybe.lift(node)
-      .fmap(findByKind(ts.SyntaxKind.ClassDeclaration));
-}
-
 function findByKind(kind: ts.SyntaxKind): (n: ts.Node) => ts.Node | undefined {
   return function (node: ts.Node) {
     function visitNode(n: ts.Node): ts.Node | undefined {
@@ -71,7 +66,8 @@ export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: stri
     ts.forEachChild(node, visitNodes);
   }
 
-  doFind(sourceFile)
+  Maybe.lift(sourceFile)
+      .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
       .fmap(visitNodes);
 
   return sourceFile;
