@@ -1,10 +1,6 @@
 import * as ts from 'typescript';
-import {readFileSync} from 'fs';
 import {F1, Maybe} from "./functions";
-
-export function parseFile(fileName: string): ts.SourceFile {
-  return createFile(fileName, readFileSync(fileName).toString());
-}
+import {NgModule} from "@angular/core";
 
 export function createFile(fileName: string, fileContents: string): ts.SourceFile {
   return ts.createSourceFile(fileName, fileContents, ts.ScriptTarget.ES2015, true);
@@ -16,13 +12,17 @@ export function addImport(sourceFile: ts.SourceFile,
   return ts.updateSourceFileNode(sourceFile, [importDeclaration, ...sourceFile.statements]);
 }
 
-function hasNgModuleDecorator(classDeclaration: ts.ClassDeclaration): boolean {
-  if (classDeclaration.decorators && classDeclaration.decorators.length) {
-    const decorator = classDeclaration.decorators[0] as ts.Decorator;
-    const callExpression = decorator.expression as ts.CallExpression;
-    return callExpression.expression.getText() === 'NgModule';
-  }
-  return false;
+export const getDecoratorName = (decorator: ts.Decorator) => {
+  let baseExpr = <any>decorator.expression || {};
+  let expr = baseExpr.expression || {};
+  return expr.text;
+};
+
+function hasNgModuleDecorator() {
+  return traverse((classDeclaration: ts.ClassDeclaration) => {
+    if (!classDeclaration.decorators) return false;
+    return classDeclaration.decorators.some(d => getDecoratorName(d) === 'NgModule');
+  });
 }
 
 function findByKind(kind: ts.SyntaxKind): F1<ts.Node, ts.Node | undefined> {
@@ -46,30 +46,26 @@ function traverse<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<ts.Node,
 export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: string): ts.SourceFile {
   // visitNodes(sourceFile);
 
-  function visitNodes(node: ts.Node) {
-    const classDeclaration = node as ts.ClassDeclaration;
-    if (hasNgModuleDecorator(classDeclaration)) {
-      const decorator = classDeclaration.decorators[0];
-      const callExpression = decorator.expression as ts.CallExpression;
-      const objectLiteralExpression = callExpression.arguments[0] as ts.ObjectLiteralExpression;
-      const properties = objectLiteralExpression.properties;
+  function visitNodes(classDeclaration: ts.ClassDeclaration) {
+    const decorator = classDeclaration.decorators.find(d => getDecoratorName(d) === 'NgModule');
+    const callExpression = decorator.expression as ts.CallExpression;
+    const objectLiteralExpression = callExpression.arguments[0] as ts.ObjectLiteralExpression;
+    const properties = objectLiteralExpression.properties;
 
-      const found = properties.filter(p => p.name.getText() === 'imports');
-      if (found.length > 0) {
-        const importsProp = found[0] as ts.PropertyAssignment;
-        const initializer = importsProp.initializer as ts.ArrayLiteralExpression;
+    const found = properties.filter(p => p.name.getText() === 'imports');
+    if (found.length > 0) {
+      const importsProp = found[0] as ts.PropertyAssignment;
+      const initializer = importsProp.initializer as ts.ArrayLiteralExpression;
 
-        const copy = [...initializer.elements.slice(0), ts.createIdentifier(moduleName)];
+      const copy = [...initializer.elements.slice(0), ts.createIdentifier(moduleName)];
 
-        importsProp.initializer = ts.updateArrayLiteral(initializer, ts.createNodeArray(copy, true));
-      }
+      importsProp.initializer = ts.updateArrayLiteral(initializer, ts.createNodeArray(copy, true));
     }
-
-    ts.forEachChild(node, visitNodes);
   }
 
   Maybe.lift(sourceFile)
       .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
+      .fmap(hasNgModuleDecorator())
       .fmap(visitNodes);
 
   return sourceFile;
