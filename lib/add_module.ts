@@ -46,11 +46,8 @@ function findNgModuleDecorator() {
 export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: string): ts.SourceFile {
   // visitNodes(sourceFile);
 
-  function visitNodes(decorator: ts.Decorator) {
-    const callExpression = decorator.expression as ts.CallExpression;
-    const objectLiteralExpression = callExpression.arguments[0] as ts.ObjectLiteralExpression;
+  function visitNodes(objectLiteralExpression: ts.ObjectLiteralExpression) {
     const properties = objectLiteralExpression.properties;
-
     const found = properties.filter(p => p.name.getText() === 'imports');
     if (found.length > 0) {
       const importsProp = found[0] as ts.PropertyAssignment;
@@ -65,6 +62,8 @@ export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: stri
   Maybe.lift(sourceFile)
       .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
       .fmap(findNgModuleDecorator())
+      .fmap(findByKind(ts.SyntaxKind.CallExpression))
+      .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression))
       .fmap(visitNodes);
 
   return sourceFile;
