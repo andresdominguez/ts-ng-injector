@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {findByKind, findNgModuleDecorator, Maybe} from "./functions";
+import {findNgModule} from "./functions";
 
 export function createFile(fileName: string, fileContents: string): ts.SourceFile {
   return ts.createSourceFile(fileName, fileContents, ts.ScriptTarget.ES2015, true);
@@ -20,11 +20,7 @@ export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: stri
   }
 
   // Find @NgModule({imports:[]})
-  Maybe.lift(sourceFile)
-      .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
-      .fmap(findNgModuleDecorator())
-      .fmap(findByKind(ts.SyntaxKind.CallExpression))
-      .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression))
+  findNgModule(sourceFile)
       .fmap((objectLiteralExpression: ts.ObjectLiteralExpression) => {
         return objectLiteralExpression.properties.find(p => p.name.getText() === 'imports');
       })

@@ -1,21 +1,17 @@
 import * as ts from 'typescript';
-import {readFileSync} from "fs";
+import {readFileSync} from 'fs';
+import {getDecoratorName} from "./functions";
 
 export interface VisitResults {
   classDeclaration: ts.ClassDeclaration;
   hasNgModule: boolean;
   imports: string[];
+  exports: string[];
 }
 
 export function visitFile(file: ts.SourceFile) {
 
 }
-
-export const getDecoratorName = (decorator: ts.Decorator) => {
-  let baseExpr = <any>decorator.expression || {};
-  let expr = baseExpr.expression || {};
-  return expr.text;
-};
 
 function hasNgModuleDecorator(classDeclaration: ts.ClassDeclaration): boolean {
   const decorators = (classDeclaration.decorators || []) as ts.NodeArray<ts.Decorator>;
@@ -61,7 +57,8 @@ export function getClasses(sourceFile: ts.SourceFile): VisitResults[] {
       classes.push({
         classDeclaration: classDeclaration,
         hasNgModule: hasNgModule,
-        imports
+        imports,
+        exports: [],
       });
     }
     ts.forEachChild(node, visitNodes);

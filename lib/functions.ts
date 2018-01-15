@@ -113,7 +113,7 @@ export const getDecoratorName = (decorator: ts.Decorator) => {
   return expr.text;
 };
 
-export function findByKind(kind: ts.SyntaxKind): F1<ts.Node, ts.Node | undefined> {
+export function findByKind<T extends ts.Node>(kind: ts.SyntaxKind): F1<ts.Node, T | undefined> {
   return traverse((n: ts.Node) => n.kind === kind);
 }
 
@@ -123,4 +123,12 @@ export function findNgModuleDecorator(): F1<ts.ClassDeclaration, ts.Decorator> {
       return node.decorators.find(d => getDecoratorName(d) === 'NgModule');
     }
   }
+}
+
+export function findNgModule(sourceFile: ts.SourceFile): Maybe<ts.ObjectLiteralExpression> {
+  return Maybe.lift(sourceFile)
+      .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
+      .fmap(findNgModuleDecorator())
+      .fmap(findByKind(ts.SyntaxKind.CallExpression))
+      .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression));
 }
