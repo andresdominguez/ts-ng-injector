@@ -1,4 +1,4 @@
-import * as ts from "typescript";
+import * as ts from 'typescript';
 
 export interface F0<R> {
   (): R;
@@ -104,5 +104,23 @@ export function traverse<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<t
     }
 
     return visitNode(node);
+  }
+}
+
+export const getDecoratorName = (decorator: ts.Decorator) => {
+  let baseExpr = <any>decorator.expression || {};
+  let expr = baseExpr.expression || {};
+  return expr.text;
+};
+
+export function findByKind(kind: ts.SyntaxKind): F1<ts.Node, ts.Node | undefined> {
+  return traverse((n: ts.Node) => n.kind === kind);
+}
+
+export function findNgModuleDecorator(): F1<ts.ClassDeclaration, ts.Decorator> {
+  return (node: ts.ClassDeclaration) => {
+    if (node.decorators) {
+      return node.decorators.find(d => getDecoratorName(d) === 'NgModule');
+    }
   }
 }

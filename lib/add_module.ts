@@ -1,6 +1,5 @@
 import * as ts from 'typescript';
-import {F1, Maybe, traverse} from "./functions";
-import {NgModule} from "@angular/core";
+import {findByKind, findNgModuleDecorator, Maybe} from "./functions";
 
 export function createFile(fileName: string, fileContents: string): ts.SourceFile {
   return ts.createSourceFile(fileName, fileContents, ts.ScriptTarget.ES2015, true);
@@ -10,24 +9,6 @@ export function addImport(sourceFile: ts.SourceFile,
                           moduleName: string, importPath: string): ts.SourceFile {
   const importDeclaration = createImportDeclaration(moduleName, importPath);
   return ts.updateSourceFileNode(sourceFile, [importDeclaration, ...sourceFile.statements]);
-}
-
-export const getDecoratorName = (decorator: ts.Decorator) => {
-  let baseExpr = <any>decorator.expression || {};
-  let expr = baseExpr.expression || {};
-  return expr.text;
-};
-
-function findByKind(kind: ts.SyntaxKind): F1<ts.Node, ts.Node | undefined> {
-  return traverse((n: ts.Node) => n.kind === kind);
-}
-
-function findNgModuleDecorator() {
-  return (node: ts.ClassDeclaration) => {
-    if (node.decorators) {
-      return node.decorators.find(d => getDecoratorName(d) === 'NgModule');
-    }
-  }
 }
 
 export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: string): ts.SourceFile {
