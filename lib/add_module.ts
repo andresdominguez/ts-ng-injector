@@ -18,13 +18,6 @@ export const getDecoratorName = (decorator: ts.Decorator) => {
   return expr.text;
 };
 
-function hasNgModuleDecorator() {
-  return traverse((classDeclaration: ts.ClassDeclaration) => {
-    if (!classDeclaration.decorators) return false;
-    return classDeclaration.decorators.some(d => getDecoratorName(d) === 'NgModule');
-  });
-}
-
 function findByKind(kind: ts.SyntaxKind): F1<ts.Node, ts.Node | undefined> {
   return traverse((n: ts.Node) => n.kind === kind);
 }
@@ -42,12 +35,18 @@ function traverse<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<ts.Node,
   }
 }
 
+function findNgModuleDecorator() {
+  return (node: ts.ClassDeclaration) => {
+    if (node.decorators) {
+      return node.decorators.find(d => getDecoratorName(d) === 'NgModule');
+    }
+  }
+}
 
 export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: string): ts.SourceFile {
   // visitNodes(sourceFile);
 
-  function visitNodes(classDeclaration: ts.ClassDeclaration) {
-    const decorator = classDeclaration.decorators.find(d => getDecoratorName(d) === 'NgModule');
+  function visitNodes(decorator: ts.Decorator) {
     const callExpression = decorator.expression as ts.CallExpression;
     const objectLiteralExpression = callExpression.arguments[0] as ts.ObjectLiteralExpression;
     const properties = objectLiteralExpression.properties;
@@ -65,7 +64,7 @@ export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: stri
 
   Maybe.lift(sourceFile)
       .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
-      .fmap(hasNgModuleDecorator())
+      .fmap(findNgModuleDecorator())
       .fmap(visitNodes);
 
   return sourceFile;
