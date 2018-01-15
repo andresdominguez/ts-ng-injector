@@ -46,17 +46,11 @@ function findNgModuleDecorator() {
 export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: string): ts.SourceFile {
   // visitNodes(sourceFile);
 
-  function visitNodes(objectLiteralExpression: ts.ObjectLiteralExpression) {
-    const properties = objectLiteralExpression.properties;
-    const found = properties.filter(p => p.name.getText() === 'imports');
-    if (found.length > 0) {
-      const importsProp = found[0] as ts.PropertyAssignment;
-      const initializer = importsProp.initializer as ts.ArrayLiteralExpression;
+  function visitNodes(importsProp: ts.PropertyAssignment) {
+    const initializer = importsProp.initializer as ts.ArrayLiteralExpression;
+    const copy = [...initializer.elements.slice(0), ts.createIdentifier(moduleName)];
+    importsProp.initializer = ts.updateArrayLiteral(initializer, ts.createNodeArray(copy, true));
 
-      const copy = [...initializer.elements.slice(0), ts.createIdentifier(moduleName)];
-
-      importsProp.initializer = ts.updateArrayLiteral(initializer, ts.createNodeArray(copy, true));
-    }
   }
 
   Maybe.lift(sourceFile)
@@ -64,6 +58,9 @@ export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: stri
       .fmap(findNgModuleDecorator())
       .fmap(findByKind(ts.SyntaxKind.CallExpression))
       .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression))
+      .fmap((objectLiteralExpression: ts.ObjectLiteralExpression) => {
+        return objectLiteralExpression.properties.find(p => p.name.getText() === 'imports');
+      })
       .fmap(visitNodes);
 
   return sourceFile;
