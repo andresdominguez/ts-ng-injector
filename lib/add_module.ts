@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {F1, Maybe} from "./functions";
+import {F1, Maybe, traverse} from "./functions";
 import {NgModule} from "@angular/core";
 
 export function createFile(fileName: string, fileContents: string): ts.SourceFile {
@@ -22,19 +22,6 @@ function findByKind(kind: ts.SyntaxKind): F1<ts.Node, ts.Node | undefined> {
   return traverse((n: ts.Node) => n.kind === kind);
 }
 
-function traverse<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<ts.Node, T | undefined> {
-  return function (node: ts.Node): T {
-    function visitNode(n: ts.Node): T | undefined {
-      if (matchFn(n)) {
-        return n as T;
-      }
-      return ts.forEachChild(n, visitNode);
-    }
-
-    return visitNode(node);
-  }
-}
-
 function findNgModuleDecorator() {
   return (node: ts.ClassDeclaration) => {
     if (node.decorators) {
@@ -44,8 +31,6 @@ function findNgModuleDecorator() {
 }
 
 export function addToNgModuleImports(sourceFile: ts.SourceFile, moduleName: string): ts.SourceFile {
-  // visitNodes(sourceFile);
-
   function visitNodes(importsProp: ts.PropertyAssignment) {
     const initializer = importsProp.initializer as ts.ArrayLiteralExpression;
     const copy = [...initializer.elements.slice(0), ts.createIdentifier(moduleName)];

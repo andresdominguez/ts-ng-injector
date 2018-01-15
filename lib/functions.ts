@@ -1,3 +1,5 @@
+import * as ts from "typescript";
+
 export interface F0<R> {
   (): R;
 }
@@ -90,4 +92,17 @@ export function ifTrue<T>(pred: F1<T, boolean>): F1<T, Maybe<T>> {
 export function listToMaybe<T>(ms: Maybe<T>[]): Maybe<T[]> {
   const unWrapped = ms.filter(m => m.isSomething).map(m => m.unwrap());
   return unWrapped.length !== 0 ? Maybe.lift(unWrapped) : Maybe.nothing;
+}
+
+export function traverse<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<ts.Node, T | undefined> {
+  return function (node: ts.Node): T {
+    function visitNode(n: ts.Node): T | undefined {
+      if (matchFn(n)) {
+        return n as T;
+      }
+      return ts.forEachChild(n, visitNode);
+    }
+
+    return visitNode(node);
+  }
 }
