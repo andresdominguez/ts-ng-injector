@@ -1,68 +1,41 @@
 import * as ts from 'typescript';
 import {readFileSync} from 'fs';
-import {getDecoratorName} from "./functions";
+import {findByKind, findNgModule, findPropertyName, Maybe} from './functions';
 
 export interface VisitResults {
   classDeclaration: ts.ClassDeclaration;
   hasNgModule: boolean;
-  imports: string[];
   exports: string[];
-}
-
-export function visitFile(file: ts.SourceFile) {
-
-}
-
-function hasNgModuleDecorator(classDeclaration: ts.ClassDeclaration): boolean {
-  const decorators = (classDeclaration.decorators || []) as ts.NodeArray<ts.Decorator>;
-  return decorators.some(d => getDecoratorName(d) === 'NgModule');
-}
-
-function findNgModuleDecorator(classDeclaration: ts.ClassDeclaration): ts.Decorator {
-  const decorators = (classDeclaration.decorators || []) as ts.NodeArray<ts.Decorator>;
-  return decorators.find(d => getDecoratorName(d) === 'NgModule')!;
-}
-
-function readImports(classDeclaration: ts.ClassDeclaration): ts.Identifier[] {
-  const imports = [];
-  visit(findNgModuleDecorator(classDeclaration));
-
-  function visit(node: ts.Node) {
-    if (node.kind === ts.SyntaxKind.PropertyAssignment) {
-      const propertyAssignment = node as ts.PropertyAssignment;
-      if (propertyAssignment.name.getText() === 'exports') {
-        console.log('yo');
-      }
-    }
-    ts.forEachChild(node, visit);
-  }
-
-  return [];
 }
 
 export function getClasses(sourceFile: ts.SourceFile): VisitResults[] {
   const classes: VisitResults[] = [];
 
-  visitNodes(sourceFile);
+  const ngModule: Maybe<ts.ObjectLiteralExpression> = findNgModule(sourceFile);
+
+  const exports = ngModule.fmap(findPropertyName('exports'))
+      .fmap(findByKind(ts.SyntaxKind.ArrayLiteralExpression))
+      .fmap((expr: ts.ArrayLiteralExpression) => {
+        return expr.elements.filter(e => e.kind === ts.SyntaxKind.Identifier);
+      })
+      .fmap(elements => elements.map(e => e.getText()));
+
 
   function visitNodes(node: ts.Node) {
     if (node.kind === ts.SyntaxKind.ClassDeclaration) {
       const classDeclaration = node as ts.ClassDeclaration;
-      const hasNgModule = hasNgModuleDecorator(classDeclaration);
-      let imports = [];
+      const exportsArray = exports.unwrap() || [];
 
-      if (hasNgModule) {
-        imports = readImports(classDeclaration);
-      }
       classes.push({
         classDeclaration: classDeclaration,
-        hasNgModule: hasNgModule,
-        imports,
-        exports: [],
+        hasNgModule: exportsArray.length > 0,
+        exports: exportsArray,
       });
     }
     ts.forEachChild(node, visitNodes);
   }
+
+  visitNodes(sourceFile);
 
   return classes;
 }
@@ -80,4 +53,5 @@ fileNames.forEach(fileName => {
 console.log('Classes', allClasses.map(c => ({
   c: c.classDeclaration.name.getText(),
   has: c.hasNgModule,
+  exp: JSON.stringify(c.exports)
 })));

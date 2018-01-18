@@ -132,3 +132,9 @@ export function findNgModule(sourceFile: ts.SourceFile): Maybe<ts.ObjectLiteralE
       .fmap(findByKind(ts.SyntaxKind.CallExpression))
       .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression));
 }
+
+export function findPropertyName(propertyName: string): F1<ts.ObjectLiteralExpression, ts.ObjectLiteralElement> {
+  return (objectLiteralExpression: ts.ObjectLiteralExpression) => {
+    return objectLiteralExpression.properties.find(p => p.name.getText() === propertyName);
+  }
+}
