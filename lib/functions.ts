@@ -145,12 +145,9 @@ export function filterByKind<T extends ts.Node>(kind: ts.SyntaxKind): F1<ts.Node
   return traverseFilter((n: ts.Node) => n.kind === kind);
 }
 
-export function findDecorator(decoratorName?: string): F1<ts.ClassDeclaration, ts.Decorator> {
+export function findDecorator(decoratorName: string): F1<ts.ClassDeclaration, ts.Decorator | undefined> {
   return (node: ts.ClassDeclaration) => {
     if (node.decorators) {
-      if (!decoratorName) {
-        return node.decorators[0];
-      }
       return node.decorators.find(d => getDecoratorName(d) === decoratorName);
     }
   }
