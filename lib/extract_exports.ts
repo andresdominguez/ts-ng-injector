@@ -1,57 +1,112 @@
 import * as ts from 'typescript';
 import {readFileSync} from 'fs';
-import {findByKind, findNgModule, findPropertyName, Maybe} from './functions';
+import {
+  findByKind, filterByKind, findNgModule, findPropertyName, getText, Maybe, getTexts,
+  listToMaybe
+} from './functions';
 
-export interface VisitResults {
-  classDeclaration: ts.ClassDeclaration;
-  hasNgModule: boolean;
-  exports: string[];
+interface ImportedFrom {
+  name: string;
+  path: string;
 }
 
-export function getClasses(sourceFile: ts.SourceFile): VisitResults[] {
-  const classes: VisitResults[] = [];
+interface VisitResults {
+  sourceFile: ts.SourceFile;
+  exports: ImportedFrom[];
+}
 
-  const ngModule: Maybe<ts.ObjectLiteralExpression> = findNgModule(sourceFile);
+interface ModuleAndFile {
+  ngModule: ts.ObjectLiteralExpression;
+  sourceFile: ts.SourceFile;
+}
 
-  const exports = ngModule.fmap(findPropertyName('exports'))
-      .fmap(findByKind(ts.SyntaxKind.ArrayLiteralExpression))
-      .fmap((expr: ts.ArrayLiteralExpression) => {
-        return expr.elements.filter(e => e.kind === ts.SyntaxKind.Identifier);
+function findNgModules(sourceFiles: ts.SourceFile[]): Maybe<ModuleAndFile[]> {
+  return listToMaybe(sourceFiles.map(sourceFile => findNgModule(sourceFile)
+      .fmap(ngModule => ({ngModule, sourceFile}))
+  ));
+}
+
+function assignExported(exported: string[], importDeclarations: Maybe<Array<{ path: string, imports: string[] }>>): Maybe<ImportedFrom[]> {
+  return importDeclarations
+      .fmap(ids => {
+        const identifierToPath = new Map<string, string>();
+        for (const importDecl of ids) {
+          for (const identifier of importDecl.imports) {
+            identifierToPath.set(identifier, importDecl.path);
+          }
+        }
+
+        return identifierToPath;
       })
-      .fmap(elements => elements.map(e => e.getText()));
-
-
-  function visitNodes(node: ts.Node) {
-    if (node.kind === ts.SyntaxKind.ClassDeclaration) {
-      const classDeclaration = node as ts.ClassDeclaration;
-      const exportsArray = exports.unwrap() || [];
-
-      classes.push({
-        classDeclaration: classDeclaration,
-        hasNgModule: exportsArray.length > 0,
-        exports: exportsArray,
+      .fmap(x => {
+        return exported.map(exp => {
+          if (x.has(exp)) {
+            return {
+              name: exp,
+              path: x.get(exp),
+            };
+          }
+        }).filter(x => {
+          console.log('x');
+          return x !== undefined;
+        })
       });
-    }
-    ts.forEachChild(node, visitNodes);
-  }
+}
 
-  visitNodes(sourceFile);
+export function collectExportedSymbols(moduleAndFile: ModuleAndFile): Maybe<VisitResults> {
+  const {ngModule, sourceFile} = moduleAndFile;
 
-  return classes;
+  // All the import {a,b} from '...'
+  const importDeclarations = Maybe.lift(sourceFile)
+      .fmap(filterByKind(ts.SyntaxKind.ImportDeclaration))
+      .fmap((importDeclarations: ts.ImportDeclaration[]) => {
+        return importDeclarations.map(importDeclaration => {
+          const moduleSpecifier = importDeclaration.moduleSpecifier;
+
+          const importSpecifiers = Maybe.lift(importDeclaration.importClause)
+              .fmap(filterByKind(ts.SyntaxKind.ImportSpecifier))
+              .fmap(getTexts);
+
+          return {
+            path: moduleSpecifier.getText(),
+            imports: importSpecifiers.isSomething ? importSpecifiers.unwrap() : [],
+          };
+        });
+      });
+
+  const exported = Maybe.lift(ngModule)
+      .fmap(findPropertyName('exports'))
+      .fmap(findByKind(ts.SyntaxKind.ArrayLiteralExpression))
+      .fmap(filterByKind(ts.SyntaxKind.Identifier))
+      .fmap(getTexts)
+      .fmap(exported => assignExported(exported, importDeclarations));
+
+  return Maybe.nothing;
 }
 
 
-const fileNames = process.argv.slice(2);
+function doSearch() {
+  const fileNames = process.argv.slice(2);
 
-console.log('filenames:', fileNames);
-let allClasses: VisitResults[] = [];
-fileNames.forEach(fileName => {
-  let sourceFile = ts.createSourceFile(fileName, readFileSync(fileName).toString(), ts.ScriptTarget.ES2015, /*setParentNodes */ true);
-  allClasses = [...allClasses, ...getClasses(sourceFile)];
-});
+  console.log('filenames:', fileNames);
 
-console.log('Classes', allClasses.map(c => ({
-  c: c.classDeclaration.name.getText(),
-  has: c.hasNgModule,
-  exp: JSON.stringify(c.exports)
-})));
+  let allClasses: VisitResults[] = [];
+  const sourceFiles = fileNames.map(fileName => {
+    return ts.createSourceFile(fileName, readFileSync(fileName).toString(), ts.ScriptTarget.ES2015, /*setParentNodes */ true);
+  });
+
+  findNgModules(sourceFiles)
+      .fmap(modulesAndFiles => modulesAndFiles.map(collectExportedSymbols))
+      .fmap(xx => {
+        console.log('1', xx);
+      });
+
+
+  // console.log('Classes', allClasses.map(c => ({
+  //   c: c.classDeclaration.name.getText(),
+  //   has: c.hasNgModule,
+  //   exp: JSON.stringify(c.exports)
+  // })));
+}
+
+doSearch();

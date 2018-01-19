@@ -107,6 +107,30 @@ export function traverse<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<t
   }
 }
 
+export function traverseFilter<T extends ts.Node>(matchFn: F1<ts.Node, boolean>): F1<ts.Node, T[] | undefined> {
+  return function (node: ts.Node): T[] {
+    const found: T[] = [];
+
+    function visitNode(n: ts.Node) {
+      if (matchFn(n)) {
+        found.push(n as T);
+      }
+      ts.forEachChild(n, visitNode);
+    }
+
+    visitNode(node);
+    return found.length ? found : undefined;
+  }
+}
+
+export function getText(node: ts.Node): string {
+  return node.getText();
+}
+
+export function getTexts(nodes: ts.Node[]): string[] {
+  return nodes.map(getText);
+}
+
 export const getDecoratorName = (decorator: ts.Decorator) => {
   let baseExpr = <any>decorator.expression || {};
   let expr = baseExpr.expression || {};
@@ -115,6 +139,10 @@ export const getDecoratorName = (decorator: ts.Decorator) => {
 
 export function findByKind<T extends ts.Node>(kind: ts.SyntaxKind): F1<ts.Node, T | undefined> {
   return traverse((n: ts.Node) => n.kind === kind);
+}
+
+export function filterByKind<T extends ts.Node>(kind: ts.SyntaxKind): F1<ts.Node, T[] | undefined> {
+  return traverseFilter((n: ts.Node) => n.kind === kind);
 }
 
 export function findNgModuleDecorator(): F1<ts.ClassDeclaration, ts.Decorator> {
