@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {filterByKind, findDecorator, getText, Maybe} from "./functions";
+import {filterByKind, findDecorator, getText, identity, Maybe} from './functions';
 
 export interface ComponentInfo {
   className: string;
@@ -15,17 +15,25 @@ export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]
         return classes
             .map(c => {
               const component = findDecorator('Component')(c);
-              const directive = findDecorator('Directive')(c);
-
-              if (component || directive) {
+              if (component) {
                 const componentInfo: ComponentInfo = {
                   className: getText(c.name),
-                  decorator: component || directive,
-                  type: component ? 'component' : 'directive'
+                  decorator: component,
+                  type: 'component',
+                };
+                return componentInfo;
+              }
+
+              const directive = findDecorator('Directive')(c);
+              if (directive) {
+                const componentInfo: ComponentInfo = {
+                  className: getText(c.name),
+                  decorator: directive,
+                  type: 'directive',
                 };
                 return componentInfo;
               }
             })
-            .filter(cd => cd);
+            .filter(identity);
       });
 }

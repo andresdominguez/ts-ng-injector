@@ -153,6 +153,9 @@ export function findDecorator(decoratorName: string): F1<ts.ClassDeclaration, ts
   }
 }
 
+export function identity<T>(x: T): T {
+  return x
+}
 
 export function findNgModule(sourceFile: ts.SourceFile): Maybe<ts.ObjectLiteralExpression> {
   return Maybe.lift(sourceFile)
