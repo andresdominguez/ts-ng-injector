@@ -15,6 +15,8 @@ export class TestModule2 {
 })
 export class TestModule1 {
 }
+
+export class Foo {}
 `;
 
   const sourceFile = createFile('before.ts', file);
