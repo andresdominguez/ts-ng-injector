@@ -1,18 +1,18 @@
 import * as ts from 'typescript';
-import {filterByKind, findNgModuleDecorator, getText, Maybe} from "./functions";
+import {filterByKind, findDecorator, getText, Maybe} from "./functions";
 
-export interface NgModuleInfo {
+export interface ClassAndDecoratorInfo {
   className: string;
   decorator: ts.Decorator;
 }
 
-export function findModules(sourceFile: ts.SourceFile): Maybe<NgModuleInfo[]> {
+export function findModules(sourceFile: ts.SourceFile): Maybe<ClassAndDecoratorInfo[]> {
   return Maybe.lift(sourceFile)
       .fmap(filterByKind<ts.ClassDeclaration>(ts.SyntaxKind.ClassDeclaration))
       .fmap((classes: ts.ClassDeclaration[]) => {
         return classes.map(theClass => ({
           className: getText(theClass.name),
-          decorator: findNgModuleDecorator()(theClass)
+          decorator: findDecorator('NgModule')(theClass)
         }));
       })
       .fmap(items => items.filter(i => !!i.decorator));

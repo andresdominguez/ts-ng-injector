@@ -145,18 +145,22 @@ export function filterByKind<T extends ts.Node>(kind: ts.SyntaxKind): F1<ts.Node
   return traverseFilter((n: ts.Node) => n.kind === kind);
 }
 
-export function findNgModuleDecorator(): F1<ts.ClassDeclaration, ts.Decorator> {
+export function findDecorator(decoratorName?: string): F1<ts.ClassDeclaration, ts.Decorator> {
   return (node: ts.ClassDeclaration) => {
     if (node.decorators) {
-      return node.decorators.find(d => getDecoratorName(d) === 'NgModule');
+      if (!decoratorName) {
+        return node.decorators[0];
+      }
+      return node.decorators.find(d => getDecoratorName(d) === decoratorName);
     }
   }
 }
 
+
 export function findNgModule(sourceFile: ts.SourceFile): Maybe<ts.ObjectLiteralExpression> {
   return Maybe.lift(sourceFile)
       .fmap(findByKind(ts.SyntaxKind.ClassDeclaration))
-      .fmap(findNgModuleDecorator())
+      .fmap(findDecorator('NgModule'))
       .fmap(findByKind(ts.SyntaxKind.CallExpression))
       .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression));
 }
