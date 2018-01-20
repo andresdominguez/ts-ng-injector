@@ -22,18 +22,17 @@ export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]
       .lift(sourceFile)
       .fmap(filterByKind<ts.ClassDeclaration>(ts.SyntaxKind.ClassDeclaration))
       .fmap((classes: ts.ClassDeclaration[]) => {
-        return classes
-            .map(classDeclaration => {
-              const component = findDecorator('Component')(classDeclaration);
-              if (component) {
-                return newComponentInfo(classDeclaration, component, 'component');
-              }
+        return classes.map(classDeclaration => {
+          const component = findDecorator('Component')(classDeclaration);
+          if (component) {
+            return newComponentInfo(classDeclaration, component, 'component');
+          }
 
-              const directive = findDecorator('Directive')(classDeclaration);
-              if (directive) {
-                return newComponentInfo(classDeclaration, directive, 'directive');
-              }
-            })
+          const directive = findDecorator('Directive')(classDeclaration);
+          if (directive) {
+            return newComponentInfo(classDeclaration, directive, 'directive');
+          }
+        });
       })
       .fmap(removeUndefined);
 }
