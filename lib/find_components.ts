@@ -1,13 +1,23 @@
 import * as ts from 'typescript';
-import {filterByKind, findDecorator, getText, identity, Maybe} from './functions';
+import {filterByKind, findDecorator, getText, Maybe, removeUndefined} from './functions';
+
+type ComponentType = 'component' | 'directive';
 
 export interface ComponentInfo {
   className: string;
   decorator: ts.Decorator;
-  type: 'component' | 'directive';
+  type: ComponentType;
 }
 
 export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]> {
+  function newComponentInfo(classDeclaration, decorator: ts.Decorator, type: ComponentType): ComponentInfo {
+    return {
+      className: getText(classDeclaration.name),
+      decorator,
+      type,
+    };
+  }
+
   return Maybe
       .lift(sourceFile)
       .fmap(filterByKind<ts.ClassDeclaration>(ts.SyntaxKind.ClassDeclaration))
@@ -16,24 +26,14 @@ export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]
             .map(classDeclaration => {
               const component = findDecorator('Component')(classDeclaration);
               if (component) {
-                const componentInfo: ComponentInfo = {
-                  className: getText(classDeclaration.name),
-                  decorator: component,
-                  type: 'component',
-                };
-                return componentInfo;
+                return newComponentInfo(classDeclaration, component, 'component');
               }
 
               const directive = findDecorator('Directive')(classDeclaration);
               if (directive) {
-                const componentInfo: ComponentInfo = {
-                  className: getText(classDeclaration.name),
-                  decorator: directive,
-                  type: 'directive',
-                };
-                return componentInfo;
+                return newComponentInfo(classDeclaration, directive, 'directive');
               }
             })
-            .filter(identity);
-      });
+      })
+      .fmap(removeUndefined);
 }
