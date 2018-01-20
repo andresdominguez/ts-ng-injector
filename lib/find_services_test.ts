@@ -1,5 +1,5 @@
-import {findModules} from "./find_modules";
 import {createFile} from "./add_module";
+import {findServices} from "./find_services";
 
 test('finds services', () => {
   const file = `import {Injectable} from '@angular/core';
@@ -11,11 +11,13 @@ export class CurrentWeatherService {
 
   constructor(private http: HttpClient) {}
 }
+
+export class Foo {}
 `;
 
   const sourceFile = createFile('before.ts', file);
 
-  const found = findModules(sourceFile);
+  const found = findServices(sourceFile);
   expect(found.isSomething).toBe(true);
-  expect(found.unwrap().map(m => m.className)).toEqual(['TestModule2', 'TestModule1']);
+  expect(found.unwrap().map(m => m.className)).toEqual(['CurrentWeatherService']);
 });
