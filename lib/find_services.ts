@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {filterByKind, findDecorator, getText, identity, Maybe} from './functions';
+import {filterByKind, findDecorator, getText, Maybe, removeUndefined} from './functions';
 
 export interface InjectableInfo {
   className: string;
@@ -17,5 +17,5 @@ export function findServices(sourceFile: ts.SourceFile): Maybe<InjectableInfo[]>
           }
         });
       })
-      .fmap(x => x.filter(identity));
+      .fmap(removeUndefined);
 }

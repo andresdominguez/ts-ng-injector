@@ -1,4 +1,5 @@
 import * as ts from 'typescript';
+import {indexDebugNode} from "@angular/core/src/debug/debug_node";
 
 export interface F0<R> {
   (): R;
@@ -155,6 +156,10 @@ export function findDecorator(decoratorName: string): F1<ts.ClassDeclaration, ts
 
 export function identity<T>(x: T): T {
   return x
+}
+
+export function removeUndefined<T>(list: T[]):T[]{
+  return list.filter(identity);
 }
 
 export function findNgModule(sourceFile: ts.SourceFile): Maybe<ts.ObjectLiteralExpression> {
