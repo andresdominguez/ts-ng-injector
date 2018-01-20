@@ -13,21 +13,21 @@ export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]
       .fmap(filterByKind<ts.ClassDeclaration>(ts.SyntaxKind.ClassDeclaration))
       .fmap((classes: ts.ClassDeclaration[]) => {
         return classes
-            .map(c => {
-              const component = findDecorator('Component')(c);
+            .map(classDeclaration => {
+              const component = findDecorator('Component')(classDeclaration);
               if (component) {
                 const componentInfo: ComponentInfo = {
-                  className: getText(c.name),
+                  className: getText(classDeclaration.name),
                   decorator: component,
                   type: 'component',
                 };
                 return componentInfo;
               }
 
-              const directive = findDecorator('Directive')(c);
+              const directive = findDecorator('Directive')(classDeclaration);
               if (directive) {
                 const componentInfo: ComponentInfo = {
-                  className: getText(c.name),
+                  className: getText(classDeclaration.name),
                   decorator: directive,
                   type: 'directive',
                 };
