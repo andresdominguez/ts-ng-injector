@@ -158,7 +158,7 @@ export function identity<T>(x: T): T {
   return x
 }
 
-export function removeUndefined<T>(list: T[]):T[]{
+export function removeUndefined<T>(list: T[]): T[] {
   return list.filter(identity);
 }
 
@@ -170,7 +170,7 @@ export function findNgModule(sourceFile: ts.SourceFile): Maybe<ts.ObjectLiteralE
       .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression));
 }
 
-export function findPropertyName(propertyName: string): F1<ts.ObjectLiteralExpression, ts.ObjectLiteralElement> {
+export function findPropertyName(propertyName: string): F1<ts.ObjectLiteralExpression, ts.ObjectLiteralElement | undefined> {
   return (objectLiteralExpression: ts.ObjectLiteralExpression) => {
     return objectLiteralExpression.properties.find(p => p.name.getText() === propertyName);
   }
