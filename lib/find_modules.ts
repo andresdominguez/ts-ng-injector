@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {filterByKind, findByKind, findDecorator, findPropertyName, getText, Maybe} from "./functions";
+import {filterByKind, findByKind, findDecorator, findPropertyName, getText, Maybe} from './functions';
 
 export interface ClassAndDecoratorInfo {
   className: string;
