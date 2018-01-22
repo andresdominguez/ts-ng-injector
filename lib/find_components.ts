@@ -1,38 +1,40 @@
 import * as ts from 'typescript';
-import {filterByKind, findDecorator, getText, Maybe, removeUndefined} from './functions';
+import {filterByKind, findByKind, findDecorator, findPropertyName, getText, Maybe, removeUndefined} from './functions';
 
 type ComponentType = 'component' | 'directive';
 
 export interface ComponentInfo {
   className: string;
-  decorator: ts.Decorator;
+  selector: string;
   type: ComponentType;
 }
 
 export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]> {
-  function newComponentInfo(classDeclaration, decorator: ts.Decorator, type: ComponentType): ComponentInfo {
-    return {
-      className: getText(classDeclaration.name),
-      decorator,
-      type,
-    };
-  }
-
   return Maybe
       .lift(sourceFile)
       .fmap(filterByKind<ts.ClassDeclaration>(ts.SyntaxKind.ClassDeclaration))
       .fmap((classes: ts.ClassDeclaration[]) => {
-        return classes.map(classDeclaration => {
-          const component = findDecorator('Component')(classDeclaration);
-          if (component) {
-            return newComponentInfo(classDeclaration, component, 'component');
-          }
+            return classes.map(c => {
+              const component = findDecorator('Component')(c);
+              const directive = findDecorator('Directive')(c);
 
-          const directive = findDecorator('Directive')(classDeclaration);
-          if (directive) {
-            return newComponentInfo(classDeclaration, directive, 'directive');
+              return Maybe.lift(component || directive)
+                  .fmap(findByKind(ts.SyntaxKind.CallExpression))
+                  .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression))
+                  .fmap(findPropertyName('selector'))
+                  .fmap(findByKind<ts.StringLiteral>(ts.SyntaxKind.StringLiteral))
+                  .fmap(sl => sl.text)
+                  .fmap((selector: string) => {
+                    const componentInfo: ComponentInfo = {
+                      className: getText(c.name),
+                      selector,
+                      type: component ? 'component' : 'directive'
+                    };
+                    return componentInfo;
+                  })
+                  .unwrap();
+            });
           }
-        });
-      })
+      )
       .fmap(removeUndefined);
 }

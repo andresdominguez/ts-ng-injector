@@ -34,6 +34,15 @@ export class Foo {}
   const sourceFile = createFile('before.ts', file);
 
   const found = findComponents(sourceFile);
-  expect(found.isSomething).toBe(true);
-  expect(found.unwrap().map(m => m.className)).toEqual(['WeatherCardComponent', 'WeatherDirective']);
+  const components = found.unwrap();
+  expect(components[0]).toEqual({
+    className: 'WeatherCardComponent',
+    selector: 'app-weather-card',
+    type: 'component'
+  });
+  expect(components[1]).toEqual({
+    className: 'WeatherDirective',
+    selector: '[foo]',
+    type: 'directive'
+  });
 });
