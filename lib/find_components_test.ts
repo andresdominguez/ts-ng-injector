@@ -35,6 +35,7 @@ export class Foo {}
 
   const found = findComponents(sourceFile);
   const components = found.unwrap();
+  expect(components.length).toEqual(2);
   expect(components[0]).toEqual({
     className: 'WeatherCardComponent',
     selector: 'app-weather-card',

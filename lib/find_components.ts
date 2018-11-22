@@ -25,11 +25,12 @@ export function findComponents(sourceFile: ts.SourceFile): Maybe<ComponentInfo[]
                   .fmap(findByKind<ts.StringLiteral>(ts.SyntaxKind.StringLiteral))
                   .fmap(sl => sl.text)
                   .fmap((selector: string) => {
-                    return <ComponentInfo>{
+                    const componentInfo: ComponentInfo = {
                       className: getText(c.name),
                       selector,
-                      type: component ? 'component' : 'directive'
+                      type: component ? 'component' : 'directive',
                     };
+                    return componentInfo;
                   })
                   .unwrap();
             });
