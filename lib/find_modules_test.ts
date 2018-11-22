@@ -1,5 +1,5 @@
 import {createFile} from './add_module';
-import {findModules, findModulesAndImports} from './find_modules';
+import {findModules, findModulesAndExports} from './find_modules';
 
 test('Finds multiple modules in file', () => {
   const file = `import {NgModule} from '@angular/core';
@@ -54,14 +54,14 @@ export class WaffleModule {
 
   const sourceFile = createFile('before.ts', file);
 
-  const found = findModulesAndImports(sourceFile);
+  const found = findModulesAndExports(sourceFile);
   const modules = found.unwrap();
   expect(modules[0]).toEqual({
     className: 'IceCreamModule',
-    imports: ['IceCreamComponent']
+    exports: ['IceCreamComponent']
   });
   expect(modules[1]).toEqual({
     className: 'WaffleModule',
-    imports: ['OrganicWaffleComponent']
+    exports: ['OrganicWaffleComponent']
   });
 });

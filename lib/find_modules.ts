@@ -8,11 +8,11 @@ export interface ClassAndDecoratorInfo {
 
 export interface ModuleAndImports {
   className: string;
-  imports: string[];
+  exports: string[];
 }
 
-function getImports(classAndDecorator: ClassAndDecoratorInfo): ModuleAndImports {
-  const imports = Maybe
+function getExports(classAndDecorator: ClassAndDecoratorInfo): ModuleAndImports {
+  const exports = Maybe
       .lift(classAndDecorator.decorator)
       .fmap(findByKind(ts.SyntaxKind.CallExpression))
       .fmap(findByKind(ts.SyntaxKind.ObjectLiteralExpression))
@@ -23,13 +23,13 @@ function getImports(classAndDecorator: ClassAndDecoratorInfo): ModuleAndImports 
 
   return {
     className: classAndDecorator.className,
-    imports: imports.isSomething ? imports.unwrap() : [],
+    exports: exports.isSomething ? exports.unwrap() : [],
   };
 }
 
-export function findModulesAndImports(sourceFile: ts.SourceFile): Maybe<ModuleAndImports[]> {
+export function findModulesAndExports(sourceFile: ts.SourceFile): Maybe<ModuleAndImports[]> {
   return findModules(sourceFile)
-      .fmap((modules) => modules.map(getImports));
+      .fmap((modules) => modules.map(getExports));
 }
 
 export function findModules(sourceFile: ts.SourceFile): Maybe<ClassAndDecoratorInfo[]> {
