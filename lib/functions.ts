@@ -158,6 +158,10 @@ export function identity<T>(x: T): T {
   return x
 }
 
+export function flatten(x) {
+  return [].concat.apply([], x);
+}
+
 export function removeUndefined<T>(list: T[]): T[] {
   return list.filter(identity);
 }

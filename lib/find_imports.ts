@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import {filterByKind, getText, Maybe} from "./functions";
+import {filterByKind, flatten, getText, identity, Maybe} from "./functions";
 import {ImportInfo} from "./find_imports";
 
 export interface ImportInfo {
@@ -26,6 +26,5 @@ export function findImports(sourceFile: ts.SourceFile): Maybe<ImportInfo[]> {
               .unwrap();
         });
       })
-      // Flatten.
-      .fmap(x => [].concat.apply([], x));
+      .fmap(arr => flatten(arr).filter(identity));
 }
