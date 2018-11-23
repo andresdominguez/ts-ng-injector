@@ -33,6 +33,6 @@ test('Find imports', () => {
   const sourceFile = createFile('before.ts', file);
 
   const imports = findImports(sourceFile).unwrap();
-  expect(imports).toEqual(1);
+  // expect(imports.length).toEqual(1);
   expect(imports[0]).toEqual({identifier: 'NgModule', from: '@angular/core'});
 });
