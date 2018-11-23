@@ -28,15 +28,15 @@ export class Foo {}
 test('Finds module exports', () => {
   const file = `import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
-import {IceCreamComponent} from '../ice-cream-cmp/ice-cream-cmp.component';
+import {IceCreamComponent, IceCreamComponent2} from '../ice-cream-cmp/ice-cream-cmp.component';
 import {OrganicWaffleComponent} from '../organic-waffle/organic-waffle.component';
 
 @NgModule({
   imports: [
     CommonModule
   ],
-  declarations: [IceCreamComponent],
-  exports: [IceCreamComponent]
+  declarations: [IceCreamComponent, IceCreamComponent2],
+  exports: [IceCreamComponent, IceCreamComponent2]
 })
 export class IceCreamModule {
 }
@@ -58,7 +58,10 @@ export class WaffleModule {
   const modules = found.unwrap();
   expect(modules[0]).toEqual({
     className: 'IceCreamModule',
-    exports: ['IceCreamComponent']
+    exports: [
+      'IceCreamComponent',
+      'IceCreamComponent2',
+    ],
   });
   expect(modules[1]).toEqual({
     className: 'WaffleModule',
